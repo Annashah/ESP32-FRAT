@@ -1,0 +1,73 @@
+# Wireshark Display Filters for ESP32-FRAT Analysis
+# Copy and paste these into Wireshark's filter bar for quick analysis
+
+# === MQTT Traffic ===
+# All MQTT traffic
+mqtt
+
+# Only MQTT CONNECT packets
+mqtt.fixed_hdr.message_type == 1
+
+# MQTT PUBLISH packets
+mqtt.fixed_hdr.message_type == 3
+
+# Specific MQTT topic (example)
+mqtt.topic == "device/admin/auth"
+
+# MQTT packets with payload
+mqtt.payload
+
+# === HTTP Traffic ===
+# All HTTP traffic on device
+http && ip.dst == 192.168.1.100
+
+# HTTP GET requests
+http.request.method == "GET"
+
+# HTTP POST requests (config changes)
+http.request.method == "POST"
+
+# Unencrypted traffic (potential credential exposure)
+!ssl && !tls
+
+# === Network Analysis ===
+# All traffic to/from device
+ip.addr == 192.168.1.100
+
+# TCP connections to device
+tcp.dst == 192.168.1.100
+
+# Port 1883 (MQTT)
+tcp.port == 1883
+
+# Port 80 (HTTP)
+tcp.port == 80
+
+# Port 443 (HTTPS) - note: device doesn't use this (vulnerability)
+tcp.port == 443
+
+# DNS queries from device
+dns && ip.src == 192.168.1.100
+
+# === Vulnerability Detection ===
+# Plaintext credentials (look for common patterns)
+http.request.method == "POST" && http contains "password"
+
+# Unencrypted MQTT auth (ESP32-FRAT-001)
+mqtt.topic == "device/admin/auth" && !tls
+
+# Large payloads (potential buffer overflow - ESP32-FRAT-003)
+mqtt.payload.length > 512
+
+# Repeated connection attempts (brute force)
+tcp.flags.syn == 1 && tcp.dst == 192.168.1.100
+
+# === Capture Filters (use before capturing) ===
+# Capture only traffic to/from device and MQTT broker
+# host 192.168.1.100 and host 192.168.1.50
+
+# Capture only suspicious ports
+# tcp port 1883 or tcp port 80 or tcp port 8080
+
+# Exclude local network broadcast
+# not broadcast and not multicast

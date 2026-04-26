@@ -1,0 +1,78 @@
+{
+  "metadata": {
+    "device": "ESP8266 NodeMCU v0.1",
+    "broker": "Mosquitto",
+    "protocol": "MQTT v3.1.1",
+    "port": 1883,
+    "tls_enabled": false
+  },
+  "topics": {
+    "device/status": {
+      "direction": "outbound",
+      "qos": 1,
+      "description": "Device status heartbeat (online/offline)",
+      "example_payload": "{\"status\": \"online\", \"uptime\": 3600}"
+    },
+    "device/sensors/temperature": {
+      "direction": "outbound",
+      "qos": 1,
+      "description": "Temperature sensor reading",
+      "example_payload": "{\"celsius\": 25.3, \"fahrenheit\": 77.5}"
+    },
+    "device/sensors/humidity": {
+      "direction": "outbound",
+      "qos": 1,
+      "description": "Humidity sensor reading",
+      "example_payload": "{\"percent\": 65}"
+    },
+    "device/admin/auth": {
+      "direction": "inbound",
+      "qos": 1,
+      "description": "Authentication request (VULNERABLE)",
+      "example_payload": "{\"username\": \"admin\", \"password\": \"password123\"}"
+    },
+    "device/admin/response": {
+      "direction": "outbound",
+      "qos": 1,
+      "description": "Admin authentication response",
+      "example_payload": "{\"authenticated\": true}"
+    },
+    "device/admin/config": {
+      "direction": "inbound",
+      "qos": 1,
+      "description": "Configuration endpoint (VULNERABLE - no auth)",
+      "example_payload": "{\"wifi_ssid\": \"NewNetwork\", \"wifi_password\": \"newpass\"}"
+    },
+    "device/command": {
+      "direction": "inbound",
+      "qos": 1,
+      "description": "Command execution topic",
+      "example_payload": "{\"cmd\": \"reboot\"}"
+    },
+    "device/ota": {
+      "direction": "inbound",
+      "qos": 1,
+      "description": "Over-the-air update delivery",
+      "example_payload": "binary firmware data"
+    }
+  },
+  "vulnerabilities": {
+    "ESP32-FRAT-001": {
+      "topic": "device/admin/auth",
+      "type": "Hardcoded Credentials",
+      "credentials": "admin:password123",
+      "impact": "Unauthenticated admin access"
+    },
+    "ESP32-FRAT-002": {
+      "topic": "device/admin/config",
+      "type": "Unauthenticated Admin Endpoint",
+      "impact": "Configuration disclosure and tampering"
+    },
+    "ESP32-FRAT-006": {
+      "topic": "device/command",
+      "type": "MQTT Injection",
+      "payload_limit": "Unbounded",
+      "impact": "Malicious command execution"
+    }
+  }
+}
